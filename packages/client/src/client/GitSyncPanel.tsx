@@ -45,8 +45,10 @@ export function GitSyncPanel({ name, onClose, onChanged }: { name: string, onClo
     setBusy(label); setError(null); setWarning(null)
     try {
       const answer = await api.projectGitAction(name, body)
-      const skipped = (answer.result as any)?.skipped
-      if (Array.isArray(skipped) && skipped.length) setWarning(`Exported without ${skipped.length} binary file(s): ${skipped.slice(0, 4).join(', ')}${skipped.length > 4 ? '…' : ''}`)
+      const result = answer.result as any
+      const skipped = result?.skipped
+      if (result?.binaryError) setWarning(`Binary export failed; the branch is text-only: ${result.binaryError}`)
+      else if (Array.isArray(skipped) && skipped.length) setWarning(`Exported without ${skipped.length} binary file(s): ${skipped.slice(0, 4).join(', ')}${skipped.length > 4 ? '…' : ''}`)
       if (answer.status) setState(answer.status)
       else await read()
     } catch (e) {
