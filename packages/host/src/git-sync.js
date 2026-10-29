@@ -46,7 +46,10 @@ export function runCli(spec, args) {
 const configOf = (mirror) => join(mirror, ".git", "layerfs-git-sync.json");
 
 function parse(stdout) {
-  const lines = stdout.trim().split(/\r?\n/).filter(Boolean);
+  const text = stdout.trim();
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { /* one-line JSON */ }
+  const lines = text.split(/\r?\n/).filter(Boolean);
   try { return JSON.parse(lines[lines.length - 1] ?? "null"); } catch { return null; }
 }
 

@@ -46,7 +46,6 @@ export function GitSyncPanel({ name, onClose, onChanged }: { name: string, onClo
       const answer = await api.projectGitAction(name, body)
       if (answer.status) setState(answer.status)
       else await read()
-      onChanged?.()
     } catch (e) {
       setError((e as Error).message)
       await read().catch(() => {})

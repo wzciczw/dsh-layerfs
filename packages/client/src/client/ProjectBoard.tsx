@@ -99,7 +99,7 @@ export function ProjectBoard({ name, state, storage, storageError, status, tab, 
         </button>
       </footer>
       {createPortal(<SandboxesTab name={name} runtime={runtime} error={runtimeError} reload={readRuntime} />, sbxEl.current)}
-      {gitOpen && <GitSyncPanel name={name} onClose={() => setGitOpen(false)} onChanged={onChanged} />}
+      {gitOpen && <GitSyncPanel name={name} onClose={() => { setGitOpen(false); onChanged?.() }} />}
     </div>
   )
 }

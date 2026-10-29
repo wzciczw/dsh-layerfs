@@ -19,7 +19,7 @@ if (args[0] === "init") {
   writeFileSync(${JSON.stringify(join(mirror, ".git", "layerfs-git-sync.json"))}, "{}\\n");
   console.log(JSON.stringify({ ok: true, configFile: repo + "/.git/layerfs-git-sync.json" }));
 } else if (args[0] === "status") {
-  console.log(JSON.stringify({ repo: ${JSON.stringify(mirror)}, gitHit: "a", gitDirty: false, layerfsMain: "b", layerfsChanged: false, gitChanged: false, advice: "ok" }));
+  console.log(JSON.stringify({ repo: ${JSON.stringify(mirror)}, gitHit: "a", gitDirty: false, layerfsMain: "b", layerfsChanged: false, gitChanged: false, advice: "ok" }, null, 2));
 } else if (args[0] === "export") {
   console.log(JSON.stringify({ branch: "layerfs/export", commit: "c" }));
 } else if (args[0] === "import" && args.includes("--abort")) {
