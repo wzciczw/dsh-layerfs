@@ -15,6 +15,7 @@ import { CASTS, MAID_AVATARS } from './avatars.ts'
 import { projectModel, type FilesSource } from './replay.ts'
 import { Dot, POLL_MS, usePoll } from './runtimeParts.tsx'
 import { SandboxesTab } from './SandboxesTab.tsx'
+import { GitSyncPanel } from './GitSyncPanel.tsx'
 import { bytes, saved, storeOf, times } from './storage.ts'
 import { followTheme } from './theme.ts'
 import { card, T } from './tokens.ts'
@@ -23,7 +24,7 @@ import { card, T } from './tokens.ts'
  * `tab`: the tab to open with (the All projects page opens Sandboxes).
  * `storage`: the Store's figures, which the page reads alongside History (null while it reads).
  */
-export function ProjectBoard({ name, state, storage, storageError, status, tab }: { name: string, state: ProjectState, storage: Storage | null, storageError: string | null, status?: ReactNode, tab?: 'sandboxes' }) {
+export function ProjectBoard({ name, state, storage, storageError, status, tab, onChanged }: { name: string, state: ProjectState, storage: Storage | null, storageError: string | null, status?: ReactNode, tab?: 'sandboxes', onChanged?: () => void }) {
   const host = useRef<HTMLDivElement>(null)
   const board = useRef<any>(null)
   const files = useRef<FilesSource | null>(null)
@@ -34,6 +35,7 @@ export function ProjectBoard({ name, state, storage, storageError, status, tab }
   const runtimeRef = useRef<ProjectRuntime | null>(null)
   const [runtime, setRuntime] = useState<ProjectRuntime | null>(null)
   const [runtimeError, setRuntimeError] = useState<string | null>(null)
+  const [gitOpen, setGitOpen] = useState(false)
   const readRuntime = () => api.projectRuntime(name).then((r) => { setRuntime(r); setRuntimeError(null) }, (e: Error) => setRuntimeError(e.message))
   usePoll(readRuntime, POLL_MS, [name])
   useEffect(() => { setRuntime(null); setRuntimeError(null) }, [name])
@@ -76,6 +78,11 @@ export function ProjectBoard({ name, state, storage, storageError, status, tab }
       <footer style={{ flex: 'none', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px 16px', minWidth: 0, padding: '4px 12px', borderTop: `1px solid ${T.border}`, background: T.well, fontSize: 12 }}>
         {status}
         <span style={{ flex: 1 }} />
+        <button type="button" className="lfs-chip" onClick={() => setGitOpen(true)}
+          title="Export a LayerFS version to a local git mirror, or import a pulled git branch into LayerFS"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: '0 -6px', padding: '0 6px', border: 0, borderRadius: T.sm, color: 'inherit', font: 'inherit', whiteSpace: 'nowrap' }}>
+          <span style={{ fontWeight: 500 }}>Git</span><span style={{ color: T.text2 }}>sync</span>
+        </button>
         <button type="button" className="lfs-chip" onClick={() => { if (board.current) board.current.ide = 'sandboxes' }}
           title={runtime ? 'Sandboxes running for this project and their Workspaces. Click for Sandboxes.' : runtimeError ?? 'Reading Sandboxes…'}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: '0 -6px', padding: '0 6px', border: 0, borderRadius: T.sm, color: 'inherit', font: 'inherit', whiteSpace: 'nowrap' }}>
@@ -92,6 +99,7 @@ export function ProjectBoard({ name, state, storage, storageError, status, tab }
         </button>
       </footer>
       {createPortal(<SandboxesTab name={name} runtime={runtime} error={runtimeError} reload={readRuntime} />, sbxEl.current)}
+      {gitOpen && <GitSyncPanel name={name} onClose={() => setGitOpen(false)} onChanged={onChanged} />}
     </div>
   )
 }

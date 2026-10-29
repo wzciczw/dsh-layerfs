@@ -76,6 +76,23 @@ export interface Overview {
   totals: { projects: number, sandboxes: number, workspaces: number }
 }
 export interface Counts { entries: number, files: number, bytes: number }
+/** The optional Git sync bridge's answer for one project (Host git-sync.js). */
+export interface GitSyncStatus {
+  configured: boolean
+  command?: string
+  mirror?: string
+  error?: string
+  status?: {
+    gitHead: string, gitDirty: boolean, layerfsMain: string
+    layerfsChanged: boolean, gitChanged: boolean, gitDiverged: boolean
+    pendingPublish: string | null, advice: string
+    lastExportRef?: string | null
+    lastExportGitCommit?: string | null
+    lastImportGitCommit?: string | null
+    lastImportLayerfsCommit?: string | null
+    lastCommonGitCommit?: string | null
+  }
+}
 /** A running or ended Init on the Host (jobs.js). */
 export interface InitJob {
   id: string
@@ -183,6 +200,10 @@ export const api = {
   cleanLeftovers: (names: string[]) => call<{ results: { name: string, ok: boolean, message?: string }[] }>('POST', '/runtime/leftovers', { names }),
   removeVolumes: (names: string[]) => call<{ results: { name: string, ok: boolean, message?: string }[] }>('POST', '/runtime/volumes', { names }),
   projectRuntime: (name: string) => call<ProjectRuntime>('GET', `/project/${encodeURIComponent(name)}/runtime`),
+  /** Optional git sync for a project; the CLI is installed separately. */
+  projectGit: (name: string) => call<GitSyncStatus>('GET', `/project/${encodeURIComponent(name)}/git`),
+  projectGitAction: (name: string, body: { action: 'status' | 'export' | 'import' | 'publish' | 'configure', mirror?: string, ref?: string, branch?: string, mergeInto?: string, publish?: boolean, resolved?: string, abort?: boolean }) =>
+    call<{ result?: unknown, status: GitSyncStatus }>('POST', `/project/${encodeURIComponent(name)}/git`, body),
   /** unmount (nothing uncommitted), discard (confirm: the path) or stop a process */
   runtimeAction: (name: string, body: { action: 'unmount' | 'discard' | 'stop', sandbox?: string, path?: string, process?: string, confirm?: string }) =>
     call<unknown>('POST', `/project/${encodeURIComponent(name)}/runtime`, body),

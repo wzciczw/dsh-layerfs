@@ -29,6 +29,8 @@ export const VOLUMES = "/var/lib/docker/volumes";
  * @property {string} [home] LayerFS home for discovery records, shared by the Host and agents' bash calls.
  * @property {string} [stateDir] Directory for project bindings and agent names.
  * @property {string} [traceDir] Directory for per-agent SDK trace files; bash calls must be able to write it.
+ * @property {string} [gitSync] Command of an installed layerfs-git-sync CLI, for the optional Git sync panel.
+ *   Unset: DSH_LAYERFS_GIT_SYNC_CLI, else layerfs-git-sync on PATH.
  * @property {number} [pollMs] Interval at which trace files are read for new lines.
  * @property {string} [runs] Folder of recorded history replay runs (layerfs #352) for the Runs player.
  * @property {string} [wslDistribution] Windows: WSL2 distribution running Docker and the worker (default Ubuntu).
@@ -83,6 +85,7 @@ export function resolveConfig(config, profile) {
     home,
     stateDir: config.stateDir || join(profile ? profile.dir : join(homedir(), ".dsh"), "dsh-layerfs"),
     traceDir: config.traceDir || join(temp, "traces"),
+    gitSync: config.gitSync || process.env.DSH_LAYERFS_GIT_SYNC_CLI || "layerfs-git-sync",
     traceInWorkspace: windows && !config.traceDir,
     pollMs: config.pollMs ?? 400,
     // agents' processes see DSH_LAYERFS_* only: these wrappers set LAYERFS_* from them first (agent/env.js)

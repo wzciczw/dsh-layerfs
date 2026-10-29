@@ -193,6 +193,7 @@ The Host reads its deployment settings from `layerfs-host` in the profile's `cor
 | `home`, `traceDir` | `<OS temp>/dsh-layerfs/{home,traces}` by default | the same |
 | `containerPrefix` | `layerfs-` by default: Sandboxes `<prefix><project>-<n>` | the same, and the worker `<prefix>worker` |
 | `stateDir` | `<profile>/dsh-layerfs` by default (bindings, agent names, journals) | the same |
+| `gitSync` | optional command of an installed `layerfs-git-sync` CLI; unset: `DSH_LAYERFS_GIT_SYNC_CLI`, else `layerfs-git-sync` on `PATH` | the same |
 
 An Init without the required settings is refused with "LayerFS is not configured: set … for layerfs-host in the profile patch"; `GET /layerfs/status` lists what is `missing`.
 
@@ -204,6 +205,18 @@ An Init without the required settings is refused with "LayerFS is not configured
     bundle: /Users/<you>/layerfs-build          # macOS: step 1's sealed bundle (manifest.json)
     # daemon: /path/to/layerfs-daemon           # Linux
 ```
+
+### Git sync panel (optional)
+
+The project status bar has a **Git sync** button when a `layerfs-git-sync` CLI is installed
+(the companion plugin). The panel can configure a local git mirror (it runs the CLI's `init` when the mirror
+has no manifest), show git/LayerFS alignment, export a chosen LayerFS ref, merge a clean export, import a
+pulled git HEAD, publish the resulting LayerFS Branch, and continue after a conflict worktree is resolved.
+The Host spawns one CLI attempt per action and never retries it; git stays outside the Host, in the process
+the CLI uses.
+
+Set `gitSync` in the `layerfs-host` entry of the profile patch, or set `DSH_LAYERFS_GIT_SYNC_CLI` on the
+dsh process. Without it the panel reports the missing command and does not touch a repository.
 
 **On macOS** the Mac runs no Store call itself. `@layerfs/runtime` runs one long-lived Linux container per LayerFS home, the worker (`<containerPrefix>worker`, `layerfs-worker` by default, labelled `layerfs.role=worker`), and every Store call of the Host and of agents' scripts runs there with the sealed bundle's `layerfs.node`; its endpoint is `<home>/worker/endpoint.json`, and agents get it as `DSH_LAYERFS_WORKER_ENDPOINT`. The Host starts it when it starts; a worker of another build is replaced, so load a new `bundle` only while no dsh run is live. It runs with `--restart unless-stopped`. A call of the Host or an agent that finds it down keeps its own error, and the Host asks the runtime to start it again.
 

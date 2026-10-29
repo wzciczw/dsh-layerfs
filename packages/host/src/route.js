@@ -31,6 +31,8 @@
 //   POST /layerfs/runtime/volumes {names}     remove this home's Store volumes no project uses
 //   GET  /layerfs/project/<name>/runtime      the project's Sandboxes, Workspaces and processes
 //   POST /layerfs/project/<name>/runtime {action, sandbox?, path?, process?, confirm?}  unmount, discard or stop
+//   GET  /layerfs/project/<name>/git         optional git sync: mirror, command, status
+//   POST /layerfs/project/<name>/git {action, ...}  configure/status/export/import/publish through an installed CLI
 //   POST /layerfs/project/<name>/remove {confirm, stopSandboxes?}  remove it (confirm: its name;
 //                                          stopSandboxes: stop its running Sandboxes first); see remove.js
 import { createHash } from "node:crypto";
@@ -40,6 +42,7 @@ import { InitJobs } from "./jobs.js";
 import { READS } from "./reads.js";
 import { removeProject } from "./remove.js";
 import { cleanLeftovers, overview, projectAction, projectRuntime, removeVolumes, restartStore, startStore } from "./runtime.js";
+import { act as gitSyncAct, configure as configureGitSync, statusOf as gitSyncStatus } from "./git-sync.js";
 
 const PREFIX = "/layerfs";
 const MAX_BODY = 64 * 1024;
@@ -120,6 +123,14 @@ export function registerRoutes(ctx, { spec, bindings, collector, trees, jobs = n
         if (req.method === "GET" && parts[2] === "storage") return send(res, 200, await trees.storage(project));
         if (req.method === "GET" && parts[2] === "runtime") return send(res, 200, await projectRuntime(trees, collector, project));
         if (req.method === "POST" && parts[2] === "runtime") return send(res, 200, await projectAction(trees, collector, project, await readJson(req)));
+        if (parts[2] === "git") {
+          if (req.method === "GET") return send(res, 200, await gitSyncStatus(spec, project.name));
+          if (req.method === "POST") {
+            const body = await readJson(req);
+            if (body.action === "configure") return send(res, 200, { result: null, status: await configureGitSync(spec, project.name, body.mirror) });
+            return send(res, 200, await gitSyncAct(spec, project.name, body));
+          }
+        }
         if (req.method === "POST" && parts[2] === "remove") {
           const body = await readJson(req);
           if (body.confirm !== project.name) return send(res, 400, { code: "not-confirmed", message: `confirm with the project's name, ${project.name}` });

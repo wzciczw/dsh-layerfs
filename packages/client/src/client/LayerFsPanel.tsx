@@ -266,7 +266,7 @@ export function LayerFsPanel({ services }: { services: () => PanelServices }) {
                 )
               })()
               : state
-                ? <ProjectBoard name={project.name} state={state} storage={storage} storageError={storageError} tab={openTab} status={stats(state).map((f) => <FactView key={f.label} f={f} />)} />
+                ? <ProjectBoard name={project.name} state={state} storage={storage} storageError={storageError} tab={openTab} status={stats(state).map((f) => <FactView key={f.label} f={f} />)} onChanged={() => setReads((n) => n + 1)} />
                 : <Skeleton />}
           </>
         )}
