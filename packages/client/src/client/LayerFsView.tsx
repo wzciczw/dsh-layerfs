@@ -20,6 +20,7 @@ import { Playback, type Step } from './playback.ts'
 import { attribute, seedEngine, type FilesSource } from './replay.ts'
 import { POLL_MS as RUNTIME_MS, usePoll } from './runtimeParts.tsx'
 import { SandboxesTab } from './SandboxesTab.tsx'
+import { GitSyncPanel } from './GitSyncPanel.tsx'
 import { MESSAGE } from './ui.ts'
 import { useHiddenComposer } from './composer.ts'
 import { storeOf } from './storage.ts'
@@ -106,6 +107,7 @@ function Board({ sessionId, view, error, pane }: { sessionId: string, view: Sess
   const runtimeRef = useRef<ProjectRuntime | null>(null)
   const [runtime, setRuntime] = useState<ProjectRuntime | null>(null)
   const [runtimeError, setRuntimeError] = useState<string | null>(null)
+  const [gitOpen, setGitOpen] = useState(false)
   const readRuntime = () => api.projectRuntime(name).then((r) => { setRuntime(r); setRuntimeError(null) }, (e: Error) => setRuntimeError(e.message))
   usePoll(() => { if (pane === 'history') void readRuntime() }, RUNTIME_MS, [name, pane])
   useEffect(() => { setRuntime(null); setRuntimeError(null) }, [name])
@@ -200,9 +202,15 @@ function Board({ sessionId, view, error, pane }: { sessionId: string, view: Sess
     <>
       <div style={BAND}>
         <div ref={host} style={{ height: '100%', position: 'relative' }} />
+        {pane === 'work' && <button type="button" onClick={() => setGitOpen(true)}
+          title="Git sync for this project: export a LayerFS ref, or import a pulled git HEAD"
+          style={{ position: 'absolute', top: 10, right: 12, zIndex: 2, font: 'inherit', fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--dsh-color-border, #8884)', background: 'var(--dsh-color-bg, #fff)', color: 'inherit', cursor: 'pointer' }}>
+          Git sync
+        </button>}
         {seed === undefined && <div style={{ ...MESSAGE, position: 'absolute', inset: 0, zIndex: 1 }}>Loading {name}'s History…</div>}
       </div>
       {pane === 'history' && createPortal(<SandboxesTab name={name} runtime={runtime} error={runtimeError} reload={readRuntime} />, sbxEl.current)}
+      {gitOpen && <GitSyncPanel name={name} onClose={() => setGitOpen(false)} />}
     </>
   )
 }

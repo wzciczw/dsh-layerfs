@@ -24,6 +24,7 @@ export function GitSyncPanel({ name, onClose, onChanged }: { name: string, onClo
   const [resolved, setResolved] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
 
   const read = async () => {
     try {
@@ -41,9 +42,11 @@ export function GitSyncPanel({ name, onClose, onChanged }: { name: string, onClo
   }, [error])
 
   const run = async (label: string, body: Parameters<typeof api.projectGitAction>[1]) => {
-    setBusy(label); setError(null)
+    setBusy(label); setError(null); setWarning(null)
     try {
       const answer = await api.projectGitAction(name, body)
+      const skipped = (answer.result as any)?.skipped
+      if (Array.isArray(skipped) && skipped.length) setWarning(`Exported without ${skipped.length} binary file(s): ${skipped.slice(0, 4).join(', ')}${skipped.length > 4 ? '…' : ''}`)
       if (answer.status) setState(answer.status)
       else await read()
     } catch (e) {
@@ -145,6 +148,7 @@ export function GitSyncPanel({ name, onClose, onChanged }: { name: string, onClo
           </>
         )}
 
+        {warning && <div role="status" style={{ color: 'var(--dsh-color-fg-warning, #a60)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{warning}</div>}
         {error && <div role="alert" style={{ color: danger, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{error}</div>}
       </div>
     </div>, document.body)

@@ -31,7 +31,14 @@ export function runCli(spec, args) {
   const command = commandOf(spec);
   const onWindows = process.platform === "win32";
   const line = [command, ...args].map(quote).join(" ");
-  const child = onWindows ? spawn(line, { shell: true, windowsHide: true, env: process.env }) : spawn(command, args, { windowsHide: true, env: process.env });
+  const env = {
+    ...process.env,
+    ...(spec.image ? { DSH_LAYERFS_GIT_SYNC_IMAGE: spec.image } : {}),
+    ...(spec.daemon ? { DSH_LAYERFS_GIT_SYNC_DAEMON: spec.daemon } : {}),
+    ...(spec.docker ? { DSH_LAYERFS_GIT_SYNC_DOCKER: spec.docker } : {}),
+    ...(spec.prefix ? { DSH_LAYERFS_GIT_SYNC_CONTAINER_PREFIX: spec.prefix } : {}),
+  };
+  const child = onWindows ? spawn(line, { shell: true, windowsHide: true, env }) : spawn(command, args, { windowsHide: true, env });
   return new Promise((resolve, reject) => {
     let stdout = "", stderr = "", timer;
     timer = setTimeout(() => { child.kill(); reject(Object.assign(new Error(`git sync timed out after ${TIMEOUT_MS} ms`), { status: 504 })); }, TIMEOUT_MS);
@@ -53,8 +60,12 @@ function parse(stdout) {
   try { return JSON.parse(lines[lines.length - 1] ?? "null"); } catch { return null; }
 }
 
+function clean(text) {
+  return String(text).replace(/\0/g, '').split(/\r?\n/).filter((line) => !/^\s*wsl:/i.test(line)).join('\n').trim();
+}
+
 function fail(answer) {
-  const message = answer.stderr.trim() || answer.stdout.trim() || `git sync exited ${answer.code}`;
+  const message = clean(answer.stderr) || clean(answer.stdout) || `git sync exited ${answer.code}`;
   throw Object.assign(new Error(message), { status: answer.code === 3 ? 409 : 500, code: answer.code });
 }
 
