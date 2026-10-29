@@ -116,7 +116,8 @@ export function GitSyncPanel({ name, onClose, onChanged }: { name: string, onClo
               <div style={{ fontWeight: 500 }}>Import git into LayerFS</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
                 <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} /> publish main</label>
-                <button type="button" style={{ ...button, ...(busy ? off : {}) }} disabled={!!busy}
+                <button type="button" style={{ ...button, ...(busy || !status?.lastExportLayerfsCommit ? off : {}) }} disabled={!!busy || !status?.lastExportLayerfsCommit}
+                  title={status?.lastExportLayerfsCommit ? undefined : 'Export a baseline first; importing into an unsynced mirror can replace LayerFS content.'}
                   onClick={() => void run('Importing…', { action: 'import', publish })}>{busy === 'Importing…' ? busy : 'Import'}</button>
                 <button type="button" style={{ ...button, ...(busy ? off : {}) }} disabled={!!busy}
                   onClick={() => void run('Publishing…', { action: 'publish' })}>Publish pending</button>
