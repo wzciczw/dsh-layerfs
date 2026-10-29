@@ -208,7 +208,7 @@ An Init without the required settings is refused with "LayerFS is not configured
 
 ### Git sync panel (optional)
 
-The project status bar has a **Git sync** button when a `layerfs-git-sync` CLI is installed
+The project status bar and the conversation **Work** tab have a **Git sync** button when a `layerfs-git-sync` CLI is installed
 (the companion plugin). The panel can configure a local git mirror (it runs the CLI's `init` when the mirror
 has no manifest), show git/LayerFS alignment, export a chosen LayerFS ref, merge a clean export, import a
 pulled git HEAD, publish the resulting LayerFS Branch, and continue after a conflict worktree is resolved.
